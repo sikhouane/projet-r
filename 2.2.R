@@ -1,59 +1,100 @@
-# fonctions communes
+############################# EXERCICE 2.2.1
 
-#newton multi-dim
-newton <- function(x0, grad_fun, hess_fun, maxit=50, tol=1e-10) {
-  x <- x0
-  for (it in 1:maxit) {
-    g <- grad_fun(x)
-    ng <- sqrt(dot(g,g))
-    if (ng < tol) return(list(x=x, it=it, grad_norm=ng, converged=TRUE))
-    H <- hess_fun(x)
-    step <- gauss_solve(H, g) #H * step=g
-    x <- x - step
-  }
-  list(x=x, it=maxit, grad_norm=sqrt(dot(grad_fun(x),grad_fun(x))), converged=FALSE)
+f <- function(x, y) {
+  exp(x*y) - exp(x) + 2
 }
 
-#produit scalaire
-#elimination gauss
-
-# EXERCICE 2.2.1
-
-f_val <- function(x, y) exp(x*y) - exp(x) + 2
-
-f_grad <- function(u) {
-  x <- u[1]; y <- u[2]
-  c(y*exp(x*y) - exp(x),
-    x*exp(x*y))
+grad_f <- function(x, y) {
+  gx <- y*exp(x*y) - exp(x)
+  gy <- x*exp(x*y)
+  c(gx, gy)
 }
 
-f_hess <- function(u) {
-  x <- u[1]; y <- u[2]
+hess_f <- function(x, y) {
   fxx <- y*y*exp(x*y) - exp(x)
   fyy <- x*x*exp(x*y)
   fxy <- (1 + x*y)*exp(x*y)
+  
   matrix(c(fxx, fxy,
            fxy, fyy), nrow=2, byrow=TRUE)
 }
 
-#newton depuis un point de départ (proche de (0,1))
-res_f <- newton(c(0.2, 0.8), f_grad, f_hess)
+x0 <- 0
+y0 <- 1
 
-#classification via hessienne 2x2 (sans eigen)
-classify_hess_2d <- function(H) {
-  a <- H[1,1]; b <- H[1,2]; c <- H[2,1]; d <- H[2,2]
-  detH <- a*d - b*c
-  if (detH > 0 && a > 0) return("Minimum local")
-  if (detH > 0 && a < 0) return("Maximum local")
-  if (detH < 0) return("Point selle")
-  "Test inconclusif"
+grad_f(x0, y0)
+H <- hess_f(x0, y0)
+
+# test hessienne (det)
+detH <- H[1,1]*H[2,2] - H[1,2]^2
+
+
+############################# EXERCICE 2.2.2
+
+g <- function(x, y, z) {
+  (x + z^2) * exp(x*(y^2 + z^2 + 1))
 }
-class_f <- classify_hess_2d(f_hess(res_f$x))
+
+grad_g <- function(x, y, z) {
+  A <- y^2 + z^2 + 1
+  ex <- exp(A*x)
+  gx <- ex * (1 + A*(x + z^2))
+  gy <- 2*x*y*(x + z^2)*ex
+  gz <- 2*z*ex * (1 + x*(x + z^2))
+  c(gx, gy, gz)
+}
+
+x0 <- -1
+y0 <- 0
+z0 <- 0
+grad_g(x0, y0, z0)
+g(x0, y0, z0)
 
 
-# EXERCICE 2.2.2
+############################EXERCICE 2.2.3
 
-# EXERCICE 2.2.3
+h <- function(x,y,z) {
+  log(x*y*z) - log(x)*log(y)*log(z)
+}
+
+grad_h <- function(x,y,z) {
+  lx <- log(x)
+  ly <- log(y)
+  lz <- log(z)
+  gx <- (1 - ly*lz)/x
+  gy <- (1 - lx*lz)/y
+  gz <- (1 - lx*ly)/z
+
+  c(gx, gy, gz)
+}
+
+p1 <- c(exp(1), exp(1), exp(1))
+p2 <- c(exp(-1), exp(-1), exp(-1))
+grad_h(p1[1], p1[2], p1[3])
+grad_h(p2[1], p2[2], p2[3])
+h(p1[1], p1[2], p1[3])
+h(p2[1], p2[2], p2[3])
 
 
+hess_h <- function(x,y,z) {
+  
+  lx <- log(x)
+  ly <- log(y)
+  lz <- log(z)
+  
+  hxx <- (ly*lz - 1)/(x^2)
+  hyy <- (lx*lz - 1)/(y^2)
+  hzz <- (lx*ly - 1)/(z^2)
+  
+  hxy <- -(lz)/(x*y)
+  hxz <- -(ly)/(x*z)
+  hyz <- -(lx)/(y*z)
+  
+  matrix(c(hxx,hxy,hxz,
+           hxy,hyy,hyz,
+           hxz,hyz,hzz),
+         3,3,byrow=TRUE)
+}
 
+H1 <- hess_h(p1[1], p1[2], p1[3])
+H2 <- hess_h(p2[1], p2[2], p2[3])
