@@ -134,32 +134,35 @@ par(op)
 # ==============================================================================
 
 # Q4 — Reproduction des résultats
+res <- PCA(donnees1, quanti.sup = 10, scale.unit = TRUE, ncp = 5, graph = FALSE)
 
-acp <- PCA(donnees1, scale.unit = TRUE, quali.sup = 10, ncp = 9, graph = FALSE)
+# Inversion des axes 1, 2, 3
+signs <- c(-1, -1, -1, 1, 1)
+res$ind$coord[, 1:5]      <- t(t(res$ind$coord[, 1:5])      * signs)
+res$var$cor[, 1:5]        <- t(t(res$var$cor[, 1:5])        * signs)
+res$quanti.sup$cor[, 1:5] <- t(t(res$quanti.sup$cor[, 1:5]) * signs)
 
-# Graphiques pour visualiser les résultats de Q4
-print(fviz_screeplot(acp, addlabels = TRUE, ylim = c(0, 55),
-                     main    = "Éboulis des valeurs propres",
-                     barfill = "steelblue3", barcolor = "steelblue4",
-                     linecolor = "firebrick"))
+# 1. Valeurs propres
+cat("=== 1. Valeurs propres ===\n")
+print(round(res$eig[, 1], 2))
 
-print(fviz_pca_var(acp, axes = c(1, 2), col.var = "cos2",
-                   gradient.cols = c("grey70", "steelblue2", "firebrick"),
-                   repel = TRUE, title = "Cercle des corrélations — Axes 1 x 2"))
+# 2. Corrélations variables x axes
+cat("\n=== 2. Corrélations ===\n")
+print(round(res$var$cor[, 1:5], 2))
 
-print(fviz_pca_var(acp, axes = c(1, 3), col.var = "cos2",
-                   gradient.cols = c("grey70", "steelblue2", "firebrick"),
-                   repel = TRUE, title = "Cercle des corrélations — Axes 1 x 3"))
+# 3. Valeurs test EST
+cat("\n=== 3. Valeurs test EST ===\n")
+n  <- nrow(donnees1)
+vt <- res$quanti.sup$cor[1, 1:5] * sqrt(n - 1)
+print(round(vt, 2))
 
-print(fviz_pca_ind(acp, axes = c(1, 2), habillage = EST,
-                   addEllipses = TRUE, ellipse.type = "convex",
-                   palette = c("steelblue3", "firebrick"), repel = TRUE,
-                   title = "Individus — Axes 1 x 2  |  couleur = EST"))
+# 4. Coordonnées individus
+cat("\n=== 4. Coordonnées des individus ===\n")
+print(round(res$ind$coord[, 1:5], 2))
 
-print(fviz_pca_biplot(acp, axes = c(1, 2), habillage = EST,
-                      palette = c("steelblue3", "firebrick"),
-                      addEllipses = FALSE, col.var = "black", repel = TRUE,
-                      title = "Biplot — Axes 1 x 2  |  couleur = EST"))
+# 5. Qualité de représentation
+cat("\n=== 5. Qualité de représentation (cos² x 100) ===\n")
+print(round(res$ind$cos2[, 1:5] * 100, 1))
 
 
 # Q5 — Répartition de l'inertie — combien d'axes retenir ? ---------------------
